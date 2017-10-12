@@ -1,4 +1,5 @@
-import { Component, PropTypes, Children } from 'react';
+import { Component, Children } from 'react';
+import PropTypes from 'prop-types';
 
 /**
  * This class uses React's childContexts to propagate the client property to all
