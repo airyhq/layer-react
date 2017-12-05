@@ -46,13 +46,13 @@ export default () =>
       // Necessary in order to grab client out of the context.
       // TODO: May want to rename to layerClient to avoid conflicts.
       static contextTypes = {
-        client: PropTypes.object,
+        layerClient: PropTypes.object,
       }
 
       constructor(props, context) {
         super(props, context);
 
-        this.client = props.client || context.client;
+        this.client = props.client || context.layerClient;
 
         this.state = {
           typing: [],
