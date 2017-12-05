@@ -16,7 +16,7 @@ export default class LayerProvider extends Component {
   }
 
   static childContextTypes = {
-    client: PropTypes.object.isRequired,
+    layerClient: PropTypes.object.isRequired,
   }
 
   constructor(props, context) {
@@ -25,7 +25,7 @@ export default class LayerProvider extends Component {
   }
 
   getChildContext() {
-    return { client: this.client };
+    return { layerClient: this.client };
   }
 
   render() {
