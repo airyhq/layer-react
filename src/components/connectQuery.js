@@ -58,7 +58,7 @@ export default (getInitialQueryParams = {}, getQueries) =>
       // Necessary in order to grab client out of the context.
       // TODO: May want to rename to layerClient to avoid conflicts.
       static contextTypes = {
-        client: PropTypes.object,
+        layerClient: PropTypes.object,
       }
 
       /**
@@ -71,7 +71,7 @@ export default (getInitialQueryParams = {}, getQueries) =>
       constructor(props, context) {
         super(props, context);
 
-        this.client = props.client || context.client;
+        this.client = props.client || context.layerClient;
         this.queries = {};
         this.callbacks = {};
 
