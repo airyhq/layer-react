@@ -18,8 +18,6 @@ var _connectQueryParent3 = _interopRequireDefault(_connectQueryParent2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -59,6 +57,8 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 exports.default = function () {
   var getInitialQueryParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
   var getQueries = arguments[1];
+  var dispatchSetQueryResults = arguments[2];
+  var dispatchUpdateQueryResults = arguments[3];
   return (
     /**
      * Takes a Component, and wraps it with a QueryContainer (makes the
@@ -80,7 +80,7 @@ exports.default = function () {
          * @extends {react.Component}
          */
         function (_connectQueryParent) {
-          _inherits(QueryContainer, _connectQueryParent);
+          _inherits(ReduxQueryContainer, _connectQueryParent);
 
           /**
            * Call getQueries to get our QueryBuilder instances, and populate
@@ -89,19 +89,19 @@ exports.default = function () {
            *
            * @method constructor
            */
-          function QueryContainer(props, context) {
-            _classCallCheck(this, QueryContainer);
+          function ReduxQueryContainer(props, context) {
+            _classCallCheck(this, ReduxQueryContainer);
 
-            var _this = _possibleConstructorReturn(this, (QueryContainer.__proto__ || Object.getPrototypeOf(QueryContainer)).call(this, props, context));
+            var _this = _possibleConstructorReturn(this, (ReduxQueryContainer.__proto__ || Object.getPrototypeOf(ReduxQueryContainer)).call(this, props, context));
 
             _this._onQueryChange = function (queryName, newResults) {
-              _this.setState({
-                queryResults: _extends({}, _this.state.queryResults, _defineProperty({}, queryName, newResults))
-              });
+              dispatchUpdateQueryResults(queryName, newResults);
             };
 
+            dispatchSetQueryResults(_this.queryResults);
+
             _this.state = {
-              queryResults: _this.queryResults,
+              // queryResults: this.queryResults,
               queryParams: _this.queryParams
             };
             return _this;
@@ -109,10 +109,12 @@ exports.default = function () {
 
           /**
            * Any time the Query's data changes,
+           * dispatch using dispatchUpdateQueryResults
+           * with the new results.
            * update this.state.queryResults[queryName]
-           * with the new results.  Setting state will cause
-           * the render method to pass the updated query data
-           * to its ComposedComponent.
+           * with the new results.  Updating the Redux store
+           * will cause all connected components to receive
+           * the updated query data.
            *
            * @method _onQueryChange
            * @param  {string} queryName    - Name of the query (name comes from keys returned by getQueries())
@@ -120,7 +122,7 @@ exports.default = function () {
            */
 
 
-          _createClass(QueryContainer, [{
+          _createClass(ReduxQueryContainer, [{
             key: 'render',
 
 
@@ -134,9 +136,7 @@ exports.default = function () {
             value: function render() {
               var _this2 = this;
 
-              var _state = this.state,
-                  queryParams = _state.queryParams,
-                  queryResults = _state.queryResults;
+              var queryParams = this.state.queryParams;
 
 
               var queryIds = {};
@@ -144,19 +144,19 @@ exports.default = function () {
                 queryIds[key] = _this2.queries[key].id;
               });
 
-              var passedProps = _extends({}, queryResults, {
+              var passedProps = {
                 query: {
                   queryParams: queryParams,
                   setQueryParams: this.setQueryParams,
                   queryIds: queryIds
                 }
-              });
+              };
 
               return _react2.default.createElement(ComposedComponent, _extends({}, this.props, passedProps));
             }
           }]);
 
-          return QueryContainer;
+          return ReduxQueryContainer;
         }((0, _connectQueryParent3.default)(getInitialQueryParams, getQueries))
       );
     }

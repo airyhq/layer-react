@@ -22,6 +22,15 @@ Object.defineProperty(exports, 'connectQuery', {
   }
 });
 
+var _connectReduxQuery = require('./components/connectReduxQuery');
+
+Object.defineProperty(exports, 'connectReduxQuery', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_connectReduxQuery).default;
+  }
+});
+
 var _connectTypingIndicator = require('./components/connectTypingIndicator');
 
 Object.defineProperty(exports, 'connectTypingIndicator', {
