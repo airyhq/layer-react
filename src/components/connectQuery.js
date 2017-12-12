@@ -69,6 +69,26 @@ export default (getInitialQueryParams = {}, getQueries) =>
       }
 
       /**
+       * Any time the Query's data changes,
+       * update this.state.queryResults[queryName]
+       * with the new results.  Setting state will cause
+       * the render method to pass the updated query data
+       * to its ComposedComponent.
+       *
+       * @method _onQueryChange
+       * @param  {string} queryName    - Name of the query (name comes from keys returned by getQueries())
+       * @param  {Object[]} newResults - Array of query results
+       */
+      _onQueryChange = (queryName, newResults) => {
+        this.setState({
+          queryResults: {
+            ...this.state.queryResults,
+            [queryName]: newResults,
+          },
+        });
+      }
+
+      /**
        * Pass any properties provided to the QueryContainer
        * to its child container, along with the query results,
        * query parameters, and a setQueryParams function.
