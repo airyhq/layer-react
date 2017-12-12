@@ -1,5 +1,6 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import React from 'react';
+
+import connectQueryParent from './connectQueryParent';
 
 /**
  * Connects your Queries to your React Component properties.
@@ -50,17 +51,7 @@ export default (getInitialQueryParams = {}, getQueries) =>
      * @class QueryContainer
      * @extends {react.Component}
      */
-    class QueryContainer extends Component {
-      static propTypes = {
-        client: PropTypes.object,
-      }
-
-      // Necessary in order to grab client out of the context.
-      // TODO: May want to rename to layerClient to avoid conflicts.
-      static contextTypes = {
-        client: PropTypes.object,
-      }
-
+    class QueryContainer extends connectQueryParent(getInitialQueryParams, getQueries) {
       /**
        * Call getQueries to get our QueryBuilder instances, and populate
        * state with the Query Parameters and Query Results (initially results
@@ -71,119 +62,10 @@ export default (getInitialQueryParams = {}, getQueries) =>
       constructor(props, context) {
         super(props, context);
 
-        this.client = props.client || context.client;
-        this.queries = {};
-        this.callbacks = {};
-
-        const queryParams = (typeof getInitialQueryParams === 'function')
-          ? getInitialQueryParams(props)
-          : getInitialQueryParams;
-
-        const queryBuilders = getQueries(props, queryParams);
-
-        // Set initial queryResults to empty arrays.
-        const queryResults = Object.keys(queryBuilders).reduce((obj, key) => ({
-          ...obj,
-          [key]: [],
-        }), {});
-
         this.state = {
-          queryResults,
-          queryParams,
+          queryResults: this.queryResults,
+          queryParams: this.queryParams,
         };
-      }
-
-      /**
-       * On mounting (and once the client is ready) call _updateQueries
-       */
-      componentWillMount() {
-        this.client.on('ready', this._onClientReady);
-
-        if (this.client.isReady) {
-          this._updateQueries(this.props, this.state.queryParams);
-        }
-      }
-
-      _onClientReady = () => {
-        this._updateQueries(this.props, this.state.queryParams);
-      }
-
-      setQueryParams = (nextQueryParams, callback) => {
-        this._updateQueries(this.props, nextQueryParams, callback);
-      }
-
-      componentWillReceiveProps(nextProps) {
-        this._updateQueries(nextProps, this.state.queryParams);
-      }
-
-      /**
-       * Generate the this.queries object to contain
-       * layer.Query instances based on the getQueries()
-       * QueryBuilders.  If the query already exists, update
-       * it rather than replace it.
-       *
-       * @method _updateQueries
-       * @private
-       * @param  {Object}   props       Component properties
-       * @param  {Object}   queryParams Query properties
-       * @param  {Function} callback
-       */
-      _updateQueries = (props, queryParams, callback) => {
-        const queryBuilders = getQueries(props, queryParams);
-
-        // Remove any queries that no longer exist
-        Object.keys(this.queries).forEach((key) => {
-          if (!queryBuilders[key]) {
-            const query = this.queries[key];
-            query.off('change', this.callbacks[query.internalId]);
-
-            delete this.queries[key];
-            delete this.callbacks[query.internalId];
-          }
-        });
-
-        // Update existing queries / Create new queries
-        Object.keys(queryBuilders).forEach((key) => {
-          const query = this.queries[key];
-          const builder = queryBuilders[key];
-
-          if (query) {
-            query.update(builder.build());
-          } else {
-            const newQuery = this.client.createQuery(builder);
-
-            this.queries[key] = newQuery;
-            this.callbacks[newQuery.internalId] = () => {
-              this._onQueryChange(key, newQuery.data);
-            };
-
-            newQuery.on('change', this.callbacks[newQuery.internalId]);
-          }
-        });
-
-        this.setState({
-          queryParams,
-        }, callback);
-      }
-
-      /**
-       * Any time the Query's data changes,
-       * update this.state.queryResults[queryName]
-       * with the new results.  Setting state will cause
-       * the render method to pass the updated query data
-       * to its ComposedComponent.
-       *
-       * @method _onQueryChange
-       * @param  {string} queryName    - Name of the query (name comes from keys returned by getQueries())
-       * @param  {Object[]} newResults - Array of query results
-       */
-      _onQueryChange = (queryName, newResults) => {
-        this.setState({
-          queryResults: {
-            ...this.state.queryResults,
-            [queryName]: newResults,
-          },
-        });
       }
 
       /**
@@ -211,14 +93,5 @@ export default (getInitialQueryParams = {}, getQueries) =>
         };
 
         return <ComposedComponent {...this.props} {...passedProps} />;
-      }
-
-      componentWillUnmount() {
-        // When the component unmounts, unsubscribe from all event listeners.
-        Object.keys(this.queries).forEach((key) => {
-          const query = this.queries[key];
-          query.off('change', this.callbacks[query.internalId]);
-          this.client.off('ready', this._onClientReady, this);
-        });
       }
     };
